@@ -2,7 +2,7 @@ import json
 import os
 import chromadb
 from chromadb.utils import embedding_functions
-from static_knowledge import STATIC_DOCS
+from src.static_knowledge import STATIC_DOCS
 
 DB_PATH = "chroma_db"
 COLLECTION_NAME = "icici_mf_facts"
