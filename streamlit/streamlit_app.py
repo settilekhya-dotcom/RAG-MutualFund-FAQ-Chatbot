@@ -18,20 +18,21 @@ def ensure_db_initialized():
     
     import chromadb
     from chromadb.utils import embedding_functions
-    client = chromadb.PersistentClient(path=db_path)
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
     
-    should_reindex = False
     try:
-        collection = client.get_collection(name="icici_mf_facts", embedding_function=emb_fn)
-        if collection.count() == 0:
-            should_reindex = True
-    except Exception:
-        should_reindex = True
+        client = chromadb.PersistentClient(path=db_path)
+        emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
         
-    if should_reindex:
+        # Check if re-indexing is needed
+        try:
+            collection = client.get_collection(name="icici_mf_facts", embedding_function=emb_fn)
+            if collection.count() > 0:
+                return  # Already initialized
+        except Exception:
+            pass # Collection doesn't exist
+            
         if os.path.exists(chunks_file):
-            with st.spinner("Initializing knowledge base... this may take a minute."):
+            with st.spinner("Indexing knowledge base... please wait."):
                 chunks = load_chunks(chunks_file)
                 collection = client.get_or_create_collection(name="icici_mf_facts", embedding_function=emb_fn)
                 
@@ -44,11 +45,12 @@ def ensure_db_initialized():
                     documents.append(doc["text"])
                     metadatas.append({"source": doc["source"], "title": doc["title"]})
                 
-                # Use upsert to handle potential duplicates safely
                 collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-                st.toast(f"Indexed {collection.count()} facts successfully!")
+                st.toast(f"✅ Indexed {collection.count()} items successfully!", icon="✅")
         else:
-            st.error(f"Missing knowledge base: {chunks_file} not found.")
+            st.error(f"Critical Error: Data file not found at {chunks_file}")
+    except Exception as e:
+        st.error(f"Initialization Failed: {str(e)}")
 
 ensure_db_initialized()
 
