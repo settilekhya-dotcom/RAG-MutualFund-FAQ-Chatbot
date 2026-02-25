@@ -9,9 +9,34 @@ from src.rag_engine import query_rag
 from src.vector_store import initialize_vector_store, load_chunks
 
 # --- Database Auto-Initialization (for Streamlit Cloud) ---
+# --- Reusable Indexing Function ---
+def run_indexing(client, emb_fn, chunks_file):
+    if not os.path.exists(chunks_file):
+        st.error(f"❌ Critical Source Missing: {chunks_file}")
+        return False
+        
+    try:
+        with st.spinner("🚀 Building Knowledge Base..."):
+            chunks = load_chunks(chunks_file)
+            collection = client.get_or_create_collection(name="icici_mf_facts", embedding_function=emb_fn)
+            
+            from src.static_knowledge import STATIC_DOCS
+            ids = [c["chunk_id"] for c in chunks]
+            documents = [c["text"] for c in chunks]
+            metadatas = [c["metadata"] for c in chunks]
+            for doc in STATIC_DOCS:
+                ids.append(doc["id"])
+                documents.append(doc["text"])
+                metadatas.append({"source": doc["source"], "title": doc["title"]})
+            
+            collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+            return True
+    except Exception as e:
+        st.error(f"❌ Indexing Failed: {str(e)}")
+        return False
+
 @st.cache_resource
 def ensure_db_initialized():
-    # Use paths relative to project root
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     db_path = os.path.join(base_dir, "data", "chroma_db")
     chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
@@ -23,34 +48,16 @@ def ensure_db_initialized():
         client = chromadb.PersistentClient(path=db_path)
         emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
         
-        # Check if re-indexing is needed
         try:
             collection = client.get_collection(name="icici_mf_facts", embedding_function=emb_fn)
             if collection.count() > 0:
-                return  # Already initialized
-        except Exception:
-            pass # Collection doesn't exist
+                return
+        except:
+            pass
             
-        if os.path.exists(chunks_file):
-            with st.spinner("Indexing knowledge base... please wait."):
-                chunks = load_chunks(chunks_file)
-                collection = client.get_or_create_collection(name="icici_mf_facts", embedding_function=emb_fn)
-                
-                from src.static_knowledge import STATIC_DOCS
-                ids = [c["chunk_id"] for c in chunks]
-                documents = [c["text"] for c in chunks]
-                metadatas = [c["metadata"] for c in chunks]
-                for doc in STATIC_DOCS:
-                    ids.append(doc["id"])
-                    documents.append(doc["text"])
-                    metadatas.append({"source": doc["source"], "title": doc["title"]})
-                
-                collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
-                st.toast(f"✅ Indexed {collection.count()} items successfully!", icon="✅")
-        else:
-            st.error(f"Critical Error: Data file not found at {chunks_file}")
+        run_indexing(client, emb_fn, chunks_file)
     except Exception as e:
-        st.error(f"Initialization Failed: {str(e)}")
+        st.error(f"DB Init Failed: {str(e)}")
 
 ensure_db_initialized()
 
@@ -185,14 +192,29 @@ with st.sidebar:
     # System Health Diagnostics
     with st.expander("🛠️ System Health", expanded=False):
         try:
+            # Show paths
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            db_path = os.path.join(base_dir, "data", "chroma_db")
+            chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
+            
+            st.code(f"DB Path: {db_path}\nData: {'Exists' if os.path.exists(chunks_file) else 'Missing'}", language="text")
+            
             from src.rag_engine import get_collection
             coll = get_collection()
             count = coll.count()
             st.success(f"Database: {count} items")
-            if st.button("Rebuild Knowledge Base"):
-                # Force delete and re-index
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                db_path = os.path.join(base_dir, "data", "chroma_db")
+            
+            if st.button("Manual Re-index"):
+                import chromadb
+                from chromadb.utils import embedding_functions
+                client = chromadb.PersistentClient(path=db_path)
+                emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+                
+                if run_indexing(client, emb_fn, chunks_file):
+                    st.success("Indexing finished! Please refresh.")
+                    st.rerun()
+            
+            if st.button("Hard Reset (Delete DB)"):
                 if os.path.exists(db_path):
                     import shutil
                     shutil.rmtree(db_path)
@@ -200,9 +222,6 @@ with st.sidebar:
                 st.rerun()
         except Exception as e:
             st.error(f"DB Error: {str(e)}")
-            if st.button("Attempt Repair"):
-                st.cache_resource.clear()
-                st.rerun()
 
     st.divider()
     st.markdown("#### 🚀 Capabilities")
