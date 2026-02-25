@@ -19,6 +19,9 @@ ADVICE_KEYWORDS = [
     "is this a good", "worth investing", "should i invest", "which fund"
 ]
 
+# Error Signatures for internal debugging (not shown to user but useful for agent to see in screenshots if needed)
+# [GR] = Guardrail triggered
+# [NF] = No facts found in search
 REFUSAL_MESSAGE = """I'm a facts-only assistant and cannot provide investment advice, recommendations, or opinions. For personalized guidance, please consult a qualified financial advisor.
 
 Learn more about mutual fund basics at: https://groww.in/learn/mutual-funds"""
@@ -93,7 +96,7 @@ Source:
 def query_rag(query: str) -> str:
     # Check for advice-seeking queries first
     if is_advice_query(query):
-        return REFUSAL_MESSAGE
+        return REFUSAL_MESSAGE + "\n\n(Investment advice/opinion requested.)"
     
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key:
@@ -110,7 +113,15 @@ def query_rag(query: str) -> str:
         # Fallback for very simple greetings or if DB is empty
         if len(query.split()) < 3:
              return "I'm ready to help! Please ask a specific question about an ICICI Prudential scheme."
-        return REFUSAL_MESSAGE
+        
+        # Check if DB is actually empty
+        try:
+            count = collection.count()
+            if count == 0:
+                return f"Internal Error: Knowledge base is empty ([DB0]). Please use the 'System Health' menu in the sidebar to rebuild it."
+            return REFUSAL_MESSAGE + "\n\n(No specific facts found for this query in our documents.)"
+        except:
+             return REFUSAL_MESSAGE
     
     # Build prompt and call Groq
     prompt = build_prompt(query, context_chunks)
