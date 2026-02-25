@@ -16,18 +16,25 @@ def ensure_db_initialized():
     db_path = os.path.join(base_dir, "data", "chroma_db")
     chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
     
-    if not os.path.exists(db_path):
+    import chromadb
+    from chromadb.utils import embedding_functions
+    client = chromadb.PersistentClient(path=db_path)
+    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+    
+    should_reindex = False
+    try:
+        collection = client.get_collection(name="icici_mf_facts", embedding_function=emb_fn)
+        if collection.count() == 0:
+            should_reindex = True
+    except Exception:
+        should_reindex = True
+        
+    if should_reindex:
         if os.path.exists(chunks_file):
-            with st.spinner("Initializing knowledge base for first run..."):
+            with st.spinner("Initializing knowledge base... this may take a minute."):
                 chunks = load_chunks(chunks_file)
-                # Ensure the vector store uses the absolute path
-                import chromadb
-                client = chromadb.PersistentClient(path=db_path)
-                from chromadb.utils import embedding_functions
-                emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
                 collection = client.get_or_create_collection(name="icici_mf_facts", embedding_function=emb_fn)
                 
-                # Re-using the logic from vector_store but with explicit paths
                 from src.static_knowledge import STATIC_DOCS
                 ids = [c["chunk_id"] for c in chunks]
                 documents = [c["text"] for c in chunks]
@@ -36,7 +43,10 @@ def ensure_db_initialized():
                     ids.append(doc["id"])
                     documents.append(doc["text"])
                     metadatas.append({"source": doc["source"], "title": doc["title"]})
+                
+                # Use upsert to handle potential duplicates safely
                 collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+                st.toast(f"Indexed {collection.count()} facts successfully!")
         else:
             st.error(f"Missing knowledge base: {chunks_file} not found.")
 

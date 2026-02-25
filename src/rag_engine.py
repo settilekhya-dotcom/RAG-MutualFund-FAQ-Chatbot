@@ -10,13 +10,13 @@ DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 COLLECTION_NAME = "icici_mf_facts"
 MODEL_NAME = "llama-3.3-70b-versatile"
 
-# Opinion-detecting keywords to trigger the refusal guard
+# Strict advice-detecting keywords (whole words or specific phrases)
 ADVICE_KEYWORDS = [
-    "should i", "should i buy", "should i sell", "is it good", "is it worth",
+    "should i buy", "should i sell", "is it good", "is it worth",
     "recommend", "advise", "best fund", "better fund", "good investment",
     "will it", "will the", "will this", "predict", "forecast", "portfolio advice",
     "good returns", "give returns", "double my", "grow my money",
-    "is this a good", "worth investing", "should i invest"
+    "is this a good", "worth investing", "should i invest", "which fund"
 ]
 
 REFUSAL_MESSAGE = """I'm a facts-only assistant and cannot provide investment advice, recommendations, or opinions. For personalized guidance, please consult a qualified financial advisor.
@@ -89,10 +89,16 @@ def query_rag(query: str) -> str:
         return "Error: GROQ_API_KEY not set in environment. Please add it to your .env file."
     
     # Retrieve relevant context
-    collection = get_collection()
-    context_chunks = retrieve_context(collection, query)
+    try:
+        collection = get_collection()
+        context_chunks = retrieve_context(collection, query)
+    except Exception as e:
+        return f"Database Error: {str(e)}"
     
     if not context_chunks:
+        # Fallback for very simple greetings or if DB is empty
+        if len(query.split()) < 3:
+             return "I'm ready to help! Please ask a specific question about an ICICI Prudential scheme."
         return REFUSAL_MESSAGE
     
     # Build prompt and call Groq
