@@ -186,7 +186,7 @@ st.markdown("""
 
 # --- Sidebar Content ---
 with st.sidebar:
-    st.markdown('<div class="logo-text">Groww</div>', unsafe_allow_html=True)
+    st.markdown('<div class="logo-text">Groww <span style="font-size: 0.8rem; color: #f29339;">v3.2-FIX</span></div>', unsafe_allow_html=True)
     st.markdown("### Fund Facts Assistant")
     st.divider()
     
