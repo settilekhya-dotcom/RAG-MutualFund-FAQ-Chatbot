@@ -46,6 +46,21 @@ graph TD
 
 ---
 
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|--------|------------|
+| **Language** | Python 3.10+ |
+| **Frontend UI** | Streamlit |
+| **LLM Inference** | Groq Cloud (Llama-3.3-70b-versatile) |
+| **Vector Database** | ChromaDB (Vector Store) |
+| **Embeddings** | Sentence-Transformers (`all-MiniLM-L6-v2`) |
+| **Data Processing** | BeautifulSoup4, Python JSON |
+| **Environment** | Dotenv, Pip |
+| **Deployment** | Streamlit Cloud / GitHub |
+
+---
+
 ## 📅 Phase-wise Development Plan
 
 ### **Phase 1: Data Acquisition & Research**
