@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_PATH = "chroma_db"
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "chroma_db")
 COLLECTION_NAME = "icici_mf_facts"
 MODEL_NAME = "llama-3.3-70b-versatile"
 
