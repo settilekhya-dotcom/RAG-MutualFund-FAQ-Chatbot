@@ -88,9 +88,27 @@ st.markdown("""
     }
     
     /* Custom Sidebar styling */
+    /* NUCLEAR OPTION: Hide ALL dividers and forced separator lines */
+    hr, [data-testid="stDivider"], .stDivider, hr.st-emotion-cache-1hqbqwh {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        opacity: 0 !important;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div > div > hr {
+        display: none !important;
+    }
+
     [data-testid="stSidebar"] {
         background-color: #171c24;
         border-right: 1px solid #2d343f;
+    }
+    
+    /* Aggressively hide all potential separators in the sidebar */
+    [data-testid="stSidebar"] * {
+        border-top: none !important;
+        border-bottom: none !important;
     }
 
     /* Primary Accent Color (Groww Green) */
@@ -159,7 +177,7 @@ st.markdown("""
     }
     
     .logo-text {
-        color: #00D09C;
+        color: #ffffff !important; /* Temporarily white to verify update */
         font-weight: 800;
         font-size: 1.8rem;
         letter-spacing: -0.5px;
@@ -186,23 +204,23 @@ st.markdown("""
 
 # --- Sidebar Content ---
 with st.sidebar:
-    st.markdown('<div class="logo-text">Groww</div>', unsafe_allow_html=True)
-    st.markdown("### Fund Facts Assistant")
-    st.divider()
-    
-
-    st.divider()
-    st.markdown("#### 🚀 Capabilities")
     st.markdown("""
-    - **Scheme Details**: NAV, Inception, Managers
-    - **Rules**: Min SIP, Exit loads, Unit pricing
-    - **Taxation**: ELSS 3-year lock-in rules
-    - **How-To**: Downloading statements & reports
-    """)
-    
-    st.divider()
-    st.markdown("#### 🛡️ Factual Only")
-    st.caption("I cannot provide advice, buy/sell calls, or predictions. I only provide data from official documents.")
+        <div style="background-color: #ff4b4b; color: white; padding: 10px; text-align: center; border-radius: 5px; margin-bottom: 20px; font-weight: bold;">
+            ⚠️ HARD REFRESH REQUIRED (v1.4)
+        </div>
+        <div class="logo-text">Groww</div>
+        <div style="margin-bottom: 20px; font-weight: bold; color: #ffffff;">Fund Facts Assistant</div>
+        
+        <div style="font-weight: bold; color: #ffffff; margin-bottom: 10px;">🚀 Capabilities</div>
+        <ul style="list-style-type: none; padding-left: 0; margin-bottom: 20px; color: #e0e0e0;">
+            <li style="margin-bottom: 8px;">• Scheme Details</li>
+            <li style="margin-bottom: 8px;">• Rules & SIPs</li>
+            <li style="margin-bottom: 8px;">• Taxation</li>
+            <li style="margin-bottom: 8px;">• How-To Guides</li>
+        </ul>
+        
+        <div style="font-weight: bold; color: #ffffff; margin-bottom: 10px;">🛡️ Factual Only</div>
+    """, unsafe_allow_html=True)
     
     if st.button("Clear History", use_container_width=True):
         st.session_state.messages = []
