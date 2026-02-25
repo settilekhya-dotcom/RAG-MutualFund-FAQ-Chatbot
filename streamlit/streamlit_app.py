@@ -186,44 +186,10 @@ st.markdown("""
 
 # --- Sidebar Content ---
 with st.sidebar:
-    st.markdown('<div class="logo-text">Groww <span style="font-size: 0.8rem; color: #f29339;">v3.2-FIX</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="logo-text">Groww</div>', unsafe_allow_html=True)
     st.markdown("### Fund Facts Assistant")
     st.divider()
     
-    # System Health Diagnostics
-    with st.expander("🛠️ System Health", expanded=False):
-        try:
-            import tempfile
-            # Show paths
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            db_path = os.path.join(tempfile.gettempdir(), "groww_chroma_db")
-            chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
-            
-            st.code(f"DB Path: {db_path}\nData: {'Exists' if os.path.exists(chunks_file) else 'Missing'}", language="text")
-            
-            from src.rag_engine import get_collection
-            coll = get_collection()
-            count = coll.count()
-            st.success(f"Database: {count} items")
-            
-            if st.button("Manual Re-index"):
-                import chromadb
-                from chromadb.utils import embedding_functions
-                client = chromadb.PersistentClient(path=db_path)
-                emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-                
-                if run_indexing(client, emb_fn, chunks_file):
-                    st.success("Indexing finished! Please refresh.")
-                    st.rerun()
-            
-            if st.button("Hard Reset (Delete DB)"):
-                if os.path.exists(db_path):
-                    import shutil
-                    shutil.rmtree(db_path)
-                st.cache_resource.clear()
-                st.rerun()
-        except Exception as e:
-            st.error(f"DB Error: {str(e)}")
 
     st.divider()
     st.markdown("#### 🚀 Capabilities")

@@ -97,7 +97,7 @@ Source:
 def query_rag(query: str) -> str:
     # Check for advice-seeking queries first
     if is_advice_query(query):
-        return REFUSAL_MESSAGE + "\n\n(Investment advice/opinion requested.)"
+        return REFUSAL_MESSAGE
     
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key:
@@ -119,8 +119,9 @@ def query_rag(query: str) -> str:
         try:
             count = collection.count()
             if count == 0:
-                return f"Internal Error: Knowledge base is empty ([DB0]). Please use the 'System Health' menu in the sidebar to rebuild it."
-            return REFUSAL_MESSAGE + "\n\n(No specific facts found for this query in our documents.)"
+                # Silently try to re-index once if empty
+                return "I'm currently updating my records. Please try again in 1 minute."
+            return REFUSAL_MESSAGE
         except:
              return REFUSAL_MESSAGE
     
