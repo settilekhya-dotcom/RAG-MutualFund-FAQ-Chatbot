@@ -111,14 +111,15 @@ The system uses a list of 20+ advice-detecting keywords to trigger a hard refusa
 
 ---
 
-## � Installation & Setup
+## 📦 Installation & Running
 
-1. **Clone Repo**: `git clone <repo-url>`
-2. **Install Deps**: `pip install -r requirements.txt`
-3. **Environment**: Add `GROQ_API_KEY` to `.env`.
-4. **Index Data**: `python src/vector_store.py`
-5. **Launch**: `streamlit run app.py`
-
+1. **Install Dependencies**: `pip install -r requirements.txt`
+2. **Configure Env**: Add `GROQ_API_KEY` to `.env`.
+3. **Initialize DB**: `python src/vector_store.py`
+4. **Run App Locally**: 
+   ```bash
+   streamlit run streamlit/streamlit_app.py
+   ```
 ---
 
 ## 💬 Sample Q&A (Assistant Demonstrations)

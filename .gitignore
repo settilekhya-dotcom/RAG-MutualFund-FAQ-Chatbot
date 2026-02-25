@@ -1,8 +1,8 @@
 # Secrets
 .env
+.streamlit/secrets.toml
 
 # Data and Vector Store
-data/
 chroma_db/
 
 # Python caching
@@ -11,8 +11,9 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Streamlit
-.streamlit/
+# Streamlit config (needed for theme)
+.streamlit/*
+!.streamlit/config.toml
 
 # Virtual Environments
 venv/
