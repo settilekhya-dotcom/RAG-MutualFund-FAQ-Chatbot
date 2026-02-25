@@ -37,16 +37,27 @@ Rules you MUST follow:
 7. NEVER provide investment advice, opinions, predictions, or recommendations.
 8. Be factual, concise, and direct."""
 
+_cached_collection = None
+
 def get_collection():
-    client = chromadb.PersistentClient(path=DB_PATH)
-    emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2"
-    )
-    return client.get_or_create_collection(
-        name=COLLECTION_NAME,
-        embedding_function=emb_fn,
-        metadata={"hnsw:space": "cosine"}
-    )
+    global _cached_collection
+    if _cached_collection is not None:
+        return _cached_collection
+        
+    try:
+        client = chromadb.PersistentClient(path=DB_PATH)
+        emb_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
+        _cached_collection = client.get_or_create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=emb_fn,
+            metadata={"hnsw:space": "cosine"}
+        )
+        return _cached_collection
+    except Exception as e:
+        print(f"Error initializing ChromaDB: {e}")
+        raise e
 
 def is_advice_query(query: str) -> bool:
     query_lower = query.lower()

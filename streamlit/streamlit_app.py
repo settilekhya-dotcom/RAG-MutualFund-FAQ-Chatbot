@@ -180,6 +180,29 @@ with st.sidebar:
     st.markdown("### Fund Facts Assistant")
     st.divider()
     
+    # System Health Diagnostics
+    with st.expander("🛠️ System Health", expanded=False):
+        try:
+            from src.rag_engine import get_collection
+            coll = get_collection()
+            count = coll.count()
+            st.success(f"Database: {count} items")
+            if st.button("Rebuild Knowledge Base"):
+                # Force delete and re-index
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                db_path = os.path.join(base_dir, "data", "chroma_db")
+                if os.path.exists(db_path):
+                    import shutil
+                    shutil.rmtree(db_path)
+                st.cache_resource.clear()
+                st.rerun()
+        except Exception as e:
+            st.error(f"DB Error: {str(e)}")
+            if st.button("Attempt Repair"):
+                st.cache_resource.clear()
+                st.rerun()
+
+    st.divider()
     st.markdown("#### 🚀 Capabilities")
     st.markdown("""
     - **Scheme Details**: NAV, Inception, Managers
