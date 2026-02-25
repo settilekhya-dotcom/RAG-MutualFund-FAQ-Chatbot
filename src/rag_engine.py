@@ -1,4 +1,5 @@
 import os
+import tempfile
 import chromadb
 from chromadb.utils import embedding_functions
 from groq import Groq
@@ -6,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "chroma_db")
+DB_PATH = os.path.join(tempfile.gettempdir(), "groww_chroma_db")
 COLLECTION_NAME = "icici_mf_facts"
 MODEL_NAME = "llama-3.3-70b-versatile"
 

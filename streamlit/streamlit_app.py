@@ -37,8 +37,9 @@ def run_indexing(client, emb_fn, chunks_file):
 
 @st.cache_resource
 def ensure_db_initialized():
+    import tempfile
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db_path = os.path.join(base_dir, "data", "chroma_db")
+    db_path = os.path.join(tempfile.gettempdir(), "groww_chroma_db")
     chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
     
     import chromadb
@@ -192,9 +193,10 @@ with st.sidebar:
     # System Health Diagnostics
     with st.expander("🛠️ System Health", expanded=False):
         try:
+            import tempfile
             # Show paths
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            db_path = os.path.join(base_dir, "data", "chroma_db")
+            db_path = os.path.join(tempfile.gettempdir(), "groww_chroma_db")
             chunks_file = os.path.join(base_dir, "data", "processed_chunks.json")
             
             st.code(f"DB Path: {db_path}\nData: {'Exists' if os.path.exists(chunks_file) else 'Missing'}", language="text")
